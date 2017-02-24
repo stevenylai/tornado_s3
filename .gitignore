@@ -1,0 +1,11 @@
+*.pyc
+*.bak
+*~
+env
+py3env
+
+dist
+build
+.tox
+*egg-info
+test_data.py
