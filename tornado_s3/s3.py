@@ -180,14 +180,14 @@ class S3Client(object):
             'Content-Length': str(len(data)),
             'Content-Type': self._guess_mimetype(path),
             'Date': self._rfc822_datetime(),
-            'Host': url_object.hostname,
+            'Host': url_object.netloc,
             'X-Amz-Content-sha256': hashlib.sha256(data).hexdigest(),
         })
 
         try:
             response = yield client.fetch(
                 self.sign_request(
-                    url_object.hostname,
+                    url_object.netloc,
                     url_object.path,
                     headers,
                     method,
@@ -215,7 +215,7 @@ class S3Client(object):
         try:
             response = yield client.fetch(
                 self.sign_request(
-                    url_object.hostname,
+                    url_object.netloc,
                     url_object.path,
                     headers,
                     method

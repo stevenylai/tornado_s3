@@ -20,4 +20,39 @@ python -m tornado_s3.cmdline --help
 Tornado Example
 ---------------
 
-TODO
+An example handler would roughly look like below
+
+.. code-block:: python
+
+  class Handler(web.RequestHandler):
+      def initialize(self, **kwargs):
+          self.client = tornado_s3.S3Client(**kwargs)
+
+      @gen.coroutine
+      def post(self, path):
+          fileinfo = self.request.files['upload'][0]
+          name = fileinfo['filename']
+          data = fileinfo['body']
+          resp = yield self.client.put(path + '/' + name, data)
+          self.set_status(resp.code)
+          self.write(resp.body)
+
+      @gen.coroutine
+      def get(self, path, include_body=True):
+          resp = yield self.client.get(
+              path, method='GET' if include_body else 'HEAD'
+          )
+          self.set_status(resp.code)
+          if include_body:
+              self.write(resp.body)
+          for key, value in resp.headers.get_all():
+              self.add_header(key, value)
+
+      def head(self, path):
+          return self.get(path, False)
+
+      @gen.coroutine
+      def delete(self, path):
+          resp = yield self.client.get(path, method='DELETE')
+          self.set_status(resp.code)
+          self.write(resp.body)
