@@ -29,6 +29,9 @@ def cmdline(args=None):
     parsers['put'] = parsers['command'].add_parser(
         'put', help='Upload to S3'
     )
+    parsers['copy'] = parsers['command'].add_parser(
+        'copy', help='Copy an existing item on the server'
+    )
     parsers['head'] = parsers['command'].add_parser(
         'head', help='Get HTTP head of a file in S3'
     )
@@ -38,14 +41,18 @@ def cmdline(args=None):
     parsers['delete'] = parsers['command'].add_parser(
         'delete', help='Delete a file from S3'
     )
-    for cmd in ('put', 'head', 'get', 'delete'):
+    for cmd in ('put', 'head', 'get', 'delete', 'copy'):
         parsers[cmd].add_argument(
-            'server_path', type=str, help='Path on the server'
+            'server_path', type=str, help='Dest path on the server'
         )
     for cmd in ('put', 'get'):
         parsers[cmd].add_argument(
             'local_path', type=str, help='Path to the local file'
         )
+    parsers['copy'].add_argument(
+        'src', type=str,
+        help='Src path on the server in the form of bucket/path'
+    )
     args = parsers['main'].parse_args(args)
     client = s3.S3Client(
         args.access_key, args.secret_key, args.bucket, args.region
@@ -60,6 +67,12 @@ def cmdline(args=None):
             fun = functools.partial(
                 client.put, args.server_path, data.read()
             )
+    elif args.command == 'copy':
+        fun = functools.partial(
+            client.put, args.server_path, b'', {
+                'x-amz-copy-source': args.src
+            }
+        )
     if fun is not None:
         res = ioloop.IOLoop.current().run_sync(fun)
         print('Status', res.code)
