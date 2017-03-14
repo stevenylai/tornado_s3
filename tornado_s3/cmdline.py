@@ -1,8 +1,9 @@
 """Simple command line interface"""
 import argparse
 import functools
+import json
 from tornado import ioloop
-from . import s3
+from . import s3, xml
 
 
 def cmdline(args=None):
@@ -80,6 +81,8 @@ def cmdline(args=None):
         if args.command == 'get' and res.code == 200:
             with open(args.local_path, 'wb') as data:
                 data.write(res.body)
+        elif res.body is not None and len(res.body) > 0:
+            print(json.dumps(xml.to_json(res.body.decode('utf-8')), indent=2))
 
 
 if __name__ == '__main__':
